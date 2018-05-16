@@ -1,0 +1,10 @@
+{
+    "name": "test",
+    "scripts": {
+        "test": "babel src --out-dir compiled"
+    },
+    "dependencies": {
+        "babel-core": "^6.26.3",
+        "babel-plugin-febrest": "file:.."
+    }
+}

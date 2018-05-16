@@ -1,0 +1,20 @@
+{
+    "name": "babel-plugin-febrest",
+    "version": "0.1.0",
+    "main": "index.js",
+    "scripts":{
+        "test": "null"
+    },
+    "author": {
+        "name": "Spencer Ye",
+        "email": "pallyoung@163.com"
+    },
+    "license": "Apache 2.0",
+    "devDependencies": {
+        "babel-core": "^6.26.3"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/febrest/babel-plugin-febrest.git"
+    }
+}

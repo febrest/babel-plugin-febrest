@@ -6,9 +6,11 @@ function include(includes, src) {
         return true;
     }
     for (let i = 0, l = includes.length; i < l; i++) {
-        let p = new RegExp('^'+path.relative('./',includes[i]));
+        let includePatch = includes[i];
+       
+        let p =  path.relative('./',includes[i]);
 
-        if(p.test(src)){
+        if(src.indexOf(p)!==-1){
             return true;
         }
     }
@@ -22,8 +24,8 @@ function makeVisitor(babel) {
                     let filename = state.file.opts.filename;
                     let opts = state.opts;
                     let includes = opts.include;
+
                     if(!include(includes,filename)){
-                        console.log(filename)
                         return;
                     }
                    
@@ -40,7 +42,7 @@ function makeVisitor(babel) {
                     let left = types.memberExpression(types.identifier(path.node.id.name), types.identifier(FEBREST_ARGSLIST))
                     let right = types.arrayExpression(params);
 
-                    path.insertAfter(types.assignmentExpression('=', left, right));
+                    path.insertAfter(types.expressionStatement(types.assignmentExpression('=', left, right)));
                 }
             }
         }

@@ -19,6 +19,22 @@ function makeVisitor(babel) {
     var types = babel.types;
     return {
         visitor: {
+            ClassMethod: function (path) {
+                let node = path.node;
+                if (node.static) {
+                    return;
+                }
+                let methodName = node.key.name;
+                if (methodName === 'getState') {
+                    let params = parseParams(node.params, types);
+                    let keyName=  FEBREST_GET_STATE_PROVIDER_DEPS;
+                    let key = types.identifier(keyName);
+                    let body = types.blockStatement([types.returnStatement(types.arrayExpression(params))]);
+                    path.insertAfter(types.classMethod('method',key,[],body));
+                }
+
+
+            },
             FunctionDeclaration: {
                 enter(path, state) {
                     let filename = state.file.opts.filename;

@@ -1,4 +1,5 @@
 const FEBREST_ARGSLIST = '$FEBREST_ARGSLIST$';
+const FEBREST_INJECTION = '$FEBREST_INJECTION$';
 
 const path = require('path');
 
@@ -20,7 +21,25 @@ function parseParams(params, types) {
         return types.stringLiteral(name);
     });
 }
-
+function paramsToString(params) {
+    let s = ''
+    params.forEach((node) => {
+        if (node.type === 'Identifier') {
+            s += node.name + ',';
+        } else if (node.type === 'AssignmentPattern') {
+            s += node.left.name + ',';
+        }
+    });
+    return s;
+}
+function addExpressionToFunction(node,types){
+    let params = paramsToString(node.params);
+    let body = node.body.body;
+    body.unshift(toStringExpression(params, types));
+}
+function toStringExpression(params, types) {
+    return types.expressionStatement(types.stringLiteral(FEBREST_INJECTION + ':[' + params + ']'))
+}
 function include(includes, src) {
     if (!includes) {
         return true;
@@ -42,10 +61,10 @@ function makeVisitor(babel) {
             ClassDeclaration: function (path) {
                 let body = path.node.body.body;
                 let name = path.node.id.name;
-                if(!body){
+                if (!body) {
                     return;
                 }
-                for(let i = 0,l=body.length;i<l;i++){
+                for (let i = 0, l = body.length; i < l; i++) {
                     let node = body[i];
                     let methodName = node.key.name;
 
@@ -57,9 +76,30 @@ function makeVisitor(babel) {
                         let getStateParamsExpression = types.arrayExpression(params);
                         let left = memberExpression(types, [name, 'prototype', 'getState', FEBREST_ARGSLIST]);
                         path.insertAfter(types.expressionStatement(types.assignmentExpression('=', left, getStateParamsExpression)));
+                        addExpressionToFunction(node,types);
                         return;
                     }
                 }
+            },
+            ObjectMethod: function (path) {
+                let node = path.node;
+                let name = node.key.name;
+                if (name !== 'getState') {
+                    return;
+                }
+                addExpressionToFunction(node,types);
+            },
+            ObjectProperty: function (path) {
+                let node = path.node;
+                let name = node.key.name;
+                if (name !== 'getState') {
+                    return;
+                }
+                if (node.value.type === 'FunctionExpression') {
+                    node = node.value;
+                    addExpressionToFunction(node,types);
+                }
+
             },
             FunctionDeclaration: {
                 enter(path, state) {
@@ -85,6 +125,7 @@ function makeVisitor(babel) {
                     let right = types.arrayExpression(params);
 
                     path.insertAfter(types.expressionStatement(types.assignmentExpression('=', left, right)));
+                    addExpressionToFunction(path.node,types);
                 }
             }
         }

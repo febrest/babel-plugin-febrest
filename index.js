@@ -39,30 +39,26 @@ function makeVisitor(babel) {
     var types = babel.types;
     return {
         visitor: {
-            ClassDeclaration: {
-                enter: function () {
-                    getStateParamsExpression = undefined;
-                },
-                exit: function (path) {
-                    if (!getStateParamsExpression) {
-                        return;
-                    }
-                    let name = path.node.id.name;
-                    let left = memberExpression(types, [name, 'prototype', 'getState', FEBREST_ARGSLIST]);
-                    path.insertAfter(types.expressionStatement(types.assignmentExpression('=', left, getStateParamsExpression)));
-                    getStateParamsExpression = undefined;
-                }
-            },
-            ClassMethod: function (path) {
-                let node = path.node;
-                if (node.static) {
+            ClassDeclaration: function (path) {
+                let body = path.node.body.body;
+                let name = path.node.id.name;
+                if(!body){
                     return;
                 }
-                let methodName = node.key.name;
-                if (methodName === 'getState') {
-                    let params = parseParams(node.params, types);
-                    getStateParamsExpression = types.arrayExpression(params);
+                for(let i = 0,l=body.length;i<l;i++){
+                    let node = body[i];
+                    let methodName = node.key.name;
 
+                    if (node.static) {
+                        continue;
+                    }
+                    if (methodName === 'getState') {
+                        let params = parseParams(node.params, types);
+                        let getStateParamsExpression = types.arrayExpression(params);
+                        let left = memberExpression(types, [name, 'prototype', 'getState', FEBREST_ARGSLIST]);
+                        path.insertAfter(types.expressionStatement(types.assignmentExpression('=', left, getStateParamsExpression)));
+                        return;
+                    }
                 }
             },
             FunctionDeclaration: {

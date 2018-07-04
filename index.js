@@ -1,5 +1,5 @@
 const FEBREST_ARGSLIST = '$FEBREST_ARGSLIST$';
-const FEBREST_INJECTION = '$FEBREST_INJECTION$';
+const FEBREST_INJECTION = '@providers';
 
 const path = require('path');
 
@@ -38,7 +38,7 @@ function addExpressionToFunction(node,types){
     body.unshift(toStringExpression(params, types));
 }
 function toStringExpression(params, types) {
-    return types.expressionStatement(types.stringLiteral(FEBREST_INJECTION + ':[' + params + ']'))
+    return types.expressionStatement(types.stringLiteral(FEBREST_INJECTION + '=[' + params + ']'))
 }
 function include(includes, src) {
     if (!includes) {
